@@ -28,7 +28,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 container.appendChild(renderer.domElement);
@@ -36,6 +36,12 @@ container.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.08, 220);
 scene.add(camera);
+// small warm fill light on the camera so the viewmodel gun reads instead
+// of sitting black in the spawn wall's shadow (range 2 m: it never
+// reaches the map's walls from the lanes).
+const vmLight = new THREE.PointLight(0xffe2b0, 0.4, 2, 2);
+vmLight.position.set(0.25, 0.35, 0.1);
+camera.add(vmLight);
 const world = buildWorld(scene);
 const effects = new Effects(scene);
 const synth = new Synth();

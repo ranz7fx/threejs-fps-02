@@ -277,7 +277,7 @@ export function buildWorld(scene) {
   ground.receiveShadow = true;
   scene.add(ground);
   // darker salt-pan strips for lane readability
-  const panMat = new THREE.MeshStandardMaterial({ color: 0xd9d0ba, roughness: 1 });
+  const panMat = new THREE.MeshStandardMaterial({ color: 0xcfc2a2, roughness: 1 });
   for (let i = 0; i < 5; i++) {
     const pan = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 44), panMat);
     pan.rotation.x = -Math.PI / 2;
@@ -342,10 +342,32 @@ export function buildWorld(scene) {
     scene.add(lamp);
   }
 
-  // lighting: low dawn sun + sky bounce, thin haze fog
-  scene.fog = new THREE.Fog(PALETTE.fog, 45, 110);
-  scene.background = new THREE.Color(PALETTE.sky);
-  const hemi = new THREE.HemisphereLight(0xffe6b8, 0x8a7a5e, 0.9);
+  // dawn sky dome: pale cream overhead, warm amber haze at the horizon.
+  // A flat background colour left the top half of every frame empty; the
+  // gradient gives the map a sky that reads at a glance from any lane.
+  const skyCanvas = document.createElement('canvas');
+  skyCanvas.width = 4; skyCanvas.height = 256;
+  const sg = skyCanvas.getContext('2d');
+  const grad = sg.createLinearGradient(0, 0, 0, 256);
+  grad.addColorStop(0, '#f6e3bd');    // zenith: pale cream
+  grad.addColorStop(0.38, '#f0c887'); // upper sky: dawn peach
+  grad.addColorStop(0.5, '#e59a4e');  // at the horizon: amber glow
+  grad.addColorStop(0.62, '#d9b57e'); // just below the horizon: warm haze
+  grad.addColorStop(1, '#cbb489');    // below the horizon (hidden by ground)
+  sg.fillStyle = grad; sg.fillRect(0, 0, 4, 256);
+  const skyTex = new THREE.CanvasTexture(skyCanvas);
+  skyTex.colorSpace = THREE.SRGBColorSpace;
+  const sky = new THREE.Mesh(
+    new THREE.SphereGeometry(180, 24, 16),
+    new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide, fog: false })
+  );
+  scene.add(sky);
+
+  // lighting: low dawn sun + sky bounce, thin haze fog. Fog starts past
+  // the far wall's distance from most lanes so the map's far side still
+  // reads instead of washing out into the haze.
+  scene.fog = new THREE.Fog(PALETTE.fog, 70, 170);
+  const hemi = new THREE.HemisphereLight(0xffe6b8, 0x9a8a6e, 1.15);
   scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xffc46b, 2.2);
   sun.position.set(-30, 28, -18);
@@ -390,7 +412,7 @@ export function makeFighterMesh(team) {
 // First-person viewmodel: a low-poly rifle held at the bottom-right of view.
 export function makeViewmodel() {
   const group = new THREE.Group();
-  const metal = new THREE.MeshStandardMaterial({ color: 0x2a2724, roughness: 0.45, metalness: 0.6 });
+  const metal = new THREE.MeshStandardMaterial({ color: 0x453f39, roughness: 0.45, metalness: 0.6 });
   const wood = new THREE.MeshStandardMaterial({ color: PALETTE.sandDark, roughness: 0.8 });
   const body = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.14, 0.62), metal);
   const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.3, 8), metal);

@@ -40,6 +40,11 @@ export function createInput(state, canvas, onLockChange) {
 
   document.addEventListener('mousemove', (e) => {
     if (!locked) return;
+    // Ignore implausible single-event jumps: some browsers deliver a
+    // cursor warp (hundreds of pixels in one event) when pointer lock
+    // engages, which would otherwise spin the view to the sky. A real
+    // mouse cannot move 300 px in one frame at 60 Hz.
+    if (Math.abs(e.movementX || 0) > 300 || Math.abs(e.movementY || 0) > 300) return;
     input.lookDX += e.movementX || 0;
     input.lookDY += e.movementY || 0;
   });
